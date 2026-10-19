@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#f6f8fb">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src blob: data:; connect-src 'self'; base-uri 'none'; object-src 'none'; form-action 'none'">
+<title>Private access · Cybersecurity Survey</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%231f2a44'/%3E%3Cpath d='M22 29v-7a10 10 0 0 1 20 0v7M20 29h24v22H20z' fill='none' stroke='white' stroke-width='4'/%3E%3C/svg%3E">
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; min-height: 100svh; display: grid; place-items: center;
+  padding: 28px 18px; background: radial-gradient(ellipse at 20% 15%, #e4eefc, transparent 55%),
+  radial-gradient(ellipse at 85% 80%, #e4f2f0, transparent 50%), #f6f8fb;
+  color: #1f2a44; font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+.card { width: min(100%, 470px); background: #fff; border: 1px solid #e1e7f0; border-radius: 24px;
+  box-shadow: 0 18px 60px #1f2a4410; padding: 36px; }
+.mark { width: 52px; height: 52px; display: grid; place-items: center; background: #e9f1fd;
+  border-radius: 16px; color: #1c62c4; margin-bottom: 26px; }
+.mark svg { width: 27px; height: 27px; }
+.eyebrow { font-size: 11px; font-weight: 750; letter-spacing: .12em; color: #0a7c88; text-transform: uppercase; }
+h1 { font-size: clamp(27px, 6vw, 32px); line-height: 1.2; letter-spacing: -.035em; margin: 10px 0 16px; }
+.intro { color: #5c6670; margin: 0 0 28px; font-size: 15px; }
+label { display: block; font-size: 13px; font-weight: 650; margin-bottom: 8px; }
+.input-row { display: flex; border: 1px solid #cdd7e5; border-radius: 12px; overflow: hidden; }
+.input-row:focus-within { outline: 3px solid #1c62c426; border-color: #1c62c4; }
+input { width: 100%; min-width: 0; border: 0; outline: none; padding: 13px 14px; font: inherit; background: #fff; color: #1f2a44; }
+button { font: inherit; cursor: pointer; }
+.show { background: #fff; color: #5c6670; border: 0; padding: 0 14px; font-size: 13px; }
+.submit { width: 100%; margin-top: 14px; border: 1px solid #1f2a44; border-radius: 12px;
+  padding: 12px 16px; font-weight: 650; background: #1f2a44; color: #fff; }
+.submit:hover { background: #293a5f; }
+.submit:disabled { opacity: .65; cursor: wait; }
+button:focus-visible { outline: 3px solid #1c62c470; outline-offset: 3px; }
+.status { min-height: 44px; font-size: 13px; line-height: 1.5; margin: 12px 0 0; color: #5c6670; }
+.status.error { color: #a92d29; }
+.note { border-top: 1px solid #e1e7f0; padding-top: 18px; margin: 6px 0 0; font-size: 12px; color: #6e7886; }
+@media (max-width: 480px) { .card { padding: 28px 23px; } }
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="10" width="16" height="12" rx="3"/><path d="M8 10V6a4 4 0 0 1 8 0v4M12 15v3"/></svg></div>
+  <div class="eyebrow">Cybersecurity survey · Private preview</div>
+  <h1>A closer look,<br>by invitation.</h1>
+  <p class="intro">Enter your access code to read the survey and explore its figures.</p>
+  <form id="unlock-form">
+    <label for="access-code">Access code</label>
+    <div class="input-row">
+      <input id="access-code" type="password" required autocomplete="off" autocapitalize="none" spellcheck="false" aria-describedby="status" placeholder="Enter your access code">
+      <button class="show" id="show-code" type="button" aria-label="Show access code" aria-pressed="false">Show</button>
+    </div>
+    <button class="submit" id="unlock" type="submit">Unlock the survey <span aria-hidden="true">→</span></button>
+    <p class="status" id="status" role="status" aria-live="polite"></p>
+  </form>
+  <noscript><p>JavaScript is required to decrypt this private preview.</p></noscript>
+  <p class="note">Content and figures are encrypted. Your code stays in this browser and is never sent to a server. Refreshing or locking the page requires the code again.</p>
+</main>
+<script>
+(() => {
+  'use strict';
+  const form = document.getElementById('unlock-form');
+  const input = document.getElementById('access-code');
+  const button = document.getElementById('unlock');
+  const status = document.getElementById('status');
+  const show = document.getElementById('show-code');
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
+  let encrypted = null;
+  let busy = false;
+  const available = window.isSecureContext && window.crypto?.subtle && 'DecompressionStream' in window;
+  if (!available) {
+    button.disabled = true;
+    status.textContent = 'Please open this page over HTTPS in a recent version of Chrome, Safari, Edge, or Firefox.';
+  }
+  show.addEventListener('click', () => {
+    const reveal = input.type === 'password';
+    input.type = reveal ? 'text' : 'password';
+    show.textContent = reveal ? 'Hide' : 'Show';
+    show.setAttribute('aria-label', reveal ? 'Hide access code' : 'Show access code');
+    show.setAttribute('aria-pressed', String(reveal));
+  });
+  input.addEventListener('input', () => input.removeAttribute('aria-invalid'));
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (busy || !available || !input.value) return;
+    busy = true;
+    button.disabled = true;
+    input.readOnly = true;
+    show.disabled = true;
+    form.setAttribute('aria-busy', 'true');
+    status.className = 'status';
+    status.textContent = 'Loading the encrypted preview…';
+    let phase = 'loading';
+    const urls = [];
+    try {
+      if (!encrypted) {
+        const response = await fetch('payload.enc?v=5ac5d5e7b4aacbd278a0c4ef2ba9f5af13cc9f5a5cc696b1893f4e7f2e99e5c2', {
+          cache: 'no-store', credentials: 'omit', signal: AbortSignal.timeout(60000)
+        });
+        if (!response.ok) throw new Error('download');
+        const buffer = new Uint8Array(await response.arrayBuffer());
+        const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', buffer));
+        const checksum = Array.from(digest, b => b.toString(16).padStart(2, '0')).join('');
+        if (checksum !== '5ac5d5e7b4aacbd278a0c4ef2ba9f5af13cc9f5a5cc696b1893f4e7f2e99e5c2' || decoder.decode(buffer.slice(0, 8)) !== 'CYBERS01') {
+          phase = 'integrity';
+          throw new Error('integrity');
+        }
+        encrypted = buffer;
+      }
+      status.textContent = 'Decrypting in your browser…';
+      phase = 'decrypting';
+      const material = await crypto.subtle.importKey('raw', encoder.encode(input.value), 'PBKDF2', false, ['deriveKey']);
+      const key = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt: encrypted.slice(8, 24),
+        iterations: 600000, hash: 'SHA-256' }, material, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+      const compressed = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: encrypted.slice(24, 36),
+        additionalData: encrypted.slice(0, 24), tagLength: 128 }, key, encrypted.slice(36));
+      input.value = '';
+      phase = 'rendering';
+      const stream = new Blob([compressed]).stream().pipeThrough(new DecompressionStream('gzip'));
+      const bundle = JSON.parse(await new Response(stream).text());
+      if (bundle.version !== 1 || typeof bundle.html !== 'string' || !bundle.assets) throw new Error('format');
+      let html = bundle.html;
+      for (const [path, asset] of Object.entries(bundle.assets)) {
+        const bytes = Uint8Array.from(atob(asset.data), char => char.charCodeAt(0));
+        const url = URL.createObjectURL(new Blob([bytes], { type: asset.type }));
+        urls.push(url);
+        html = html.split(path).join(url);
+      }
+      encrypted = null;
+      // 仅解密已认证的本机生成内容；图片使用内存 Blob，不落地到公开路径。
+      document.open();
+      document.write(html);
+      document.close();
+      window.addEventListener('pagehide', () => urls.forEach(url => URL.revokeObjectURL(url)), { once: true });
+      requestAnimationFrame(() => {
+        try { document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView(); }
+        catch (_) { /* 非法片段不影响正文解锁。 */ }
+      });
+    } catch (error) {
+      urls.forEach(url => URL.revokeObjectURL(url));
+      status.className = 'status error';
+      if (phase === 'decrypting' && error.name === 'OperationError') {
+        status.textContent = 'That access code is not correct. Please try again.';
+        input.setAttribute('aria-invalid', 'true');
+      } else if (phase === 'loading') {
+        status.textContent = 'The encrypted preview could not be loaded. Check your connection and try again.';
+      } else if (phase === 'integrity') {
+        status.textContent = 'The site was updated or the download is incomplete. Refresh the page and try again.';
+      } else {
+        status.textContent = 'This browser could not open the preview. Please refresh or try a recent browser.';
+      }
+      input.focus();
+      input.select();
+    } finally {
+      busy = false;
+      button.disabled = false;
+      input.readOnly = false;
+      show.disabled = false;
+      form.removeAttribute('aria-busy');
+    }
+  });
+})();
+</script>
+</body>
+</html>
